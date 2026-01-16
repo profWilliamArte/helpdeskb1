@@ -29,7 +29,7 @@ Explicación de cada paquete:
         ._ bootstrap@5.3.8          Framework de css
 
 
-1.3 Crear estructura de carpetas, paginas basucas  y limpia los css
+1.3 Crear estructura de carpetas, paginas, componentes y limpia los css
 
 src/
 ├── components/
