@@ -1,0 +1,290 @@
+GUÍA COMPLETA PARA CONFIGURAR SUPABASE (Paso a Paso)
+
+PASO 2.1: CREAR CUENTA EN SUPABASE
+
+1. Registrarse en Supabase
+    Abrir navegador y dirigirse a: https://supabase.com
+
+    Click en "Start your project" (esquina superior derecha)
+
+    Click en "Sign in" → "Sign up"
+
+Registrarse con:
+
+    Opción 1: Cuenta de GitHub (recomendado para desarrolladores)
+
+    Opción 2: Email y contraseña
+
+    2. Verificar email (si se registró con email)
+        Revisar bandeja de entrada
+
+        Click en el enlace de verificación que envió Supabase
+
+PASO 2.2: CREAR EL PROYECTO HELP DESK
+
+1. Crear nuevo proyecto
+    Una vez dentro de Supabase, click en "New project"
+
+    Llenar los datos:
+    Name: helpdesk-system
+        Database Password: [OeeP6vvPTbt38wX8]
+        Region: [elegir la más cercana, ej: East US (North Virginia)]
+        Pricing Plan: Free
+
+PASO 2.3: OBTENER CREDENCIALES
+
+1. Encontrar las credenciales
+    En el dashboard de tu proyecto, ve a Settings (rueda dentada en menú izquierdo) → API
+
+    2. Copiar estas credenciales:
+        en Data API
+            busca el URL:
+                RESTful endpoint for querying and managing your database
+                https://soipphlkhvtbqybjthtzXXX.supabase.co
+
+            busca el API Key : sb_XXXpublishable_SlHU7Y4E_3FqdxVSB3xr9w_MX2Ahh0h
+
+3. Crear archivo .env.local en React:
+
+    VITE_REACT_APP_SUPABASE_URL=https://xxxxxxxxxxxxxxxx.supabase.co
+    VITE_REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+PASO 2.4: CONFIGURAR AUTENTICACIÓN (NUEVA INTERFAZ)
+    1. Acceder a la configuración correcta:
+    En el menú Authentication debes buscar y hacer click en:
+        2. Dentro de "Configuration":
+            Haz click en "Sign In / Providers"
+            Sección 1: Sign In Methods
+                [ ] Enable phone sign-in
+                [✓] Enable email sign-in  ← MARCAR ESTA CASILLA
+                [ ] Enable email confirma
+
+            Sección 2: OAuth Providers (Opcional)
+                [ ] Google
+                [ ] GitHub
+                [ ] Facebook
+                ... etc.
+
+    Para nuestro proyecto, solo necesitamos Email activado.
+
+    4. Configurar URLs (IMPORTANTE):
+        Volver a Configuration
+            Hacer click en "URL Configuration"
+            Configurar:
+
+            ite URL:
+            http://localhost:3000
+
+            Redirect URLs (additional):
+                http://localhost:3000/dashboard
+                http://localhost:3000/login
+                http://localhost:3000/register
+                
+            Click en "Save"
+
+
+Pasos exactos:
+    Click: Authentication → Configuration
+    Click: Sign In / Providers
+    Marcar: ☑ Enable email sign-in
+    Volver: Configuration (breadcrumb arriba)
+    Click: URL Configuration
+    Agregar: http://localhost:3000 y las URLs adicionales
+    Click: Save
+    
+
+VERIFICACIÓN RÁPIDA:
+Prueba 1: Crear usuario manual
+
+Ir a Authentication → Users
+    Click en "Add user" (botón azul)
+    Llenar:
+        Email: test@ejemplo.com
+        Password: prueba%1401
+
+        Click en "Create user"
+
+
+
+PASO 2.5: CREAR LAS TABLAS CON SQL EDITOR
+
+1. Abrir SQL Editor
+    En el menú izquierdo de Supabase, hacer click en "SQL Editor"
+
+    Click en "New query" (botón verde)
+
+2. Crear el script completo
+    Copiar y pegar TODO este script en el editor SQL:
+
+    -- 1. Tabla de Perfiles (se conecta con auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'agent', 'user')),
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 2. Tabla de Categorías
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  color TEXT DEFAULT '#2563eb',
+  icon TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 3. Tabla de Tickets
+CREATE TABLE IF NOT EXISTS tickets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  
+  -- Relaciones
+  created_by UUID REFERENCES profiles(id) NOT NULL,
+  assigned_to UUID REFERENCES profiles(id),
+  category_id UUID REFERENCES categories(id),
+  
+  -- Fechas importantes
+  due_date TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Módulo específico
+  module TEXT CHECK (module IN ('purchases', 'errors', 'support', 'other')),
+  purchase_details JSONB,
+  error_details JSONB,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 4. Tabla de Comentarios
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  content TEXT NOT NULL,
+  is_internal BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 5. Tabla de Historial
+CREATE TABLE IF NOT EXISTS ticket_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE NOT NULL,
+  changed_by UUID REFERENCES profiles(id) NOT NULL,
+  field_changed TEXT NOT NULL,
+  old_value TEXT,
+  new_value TEXT,
+  change_date TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Insertar categorías iniciales
+INSERT INTO categories (name, description, color, icon) VALUES
+  ('Error de Sistema', 'Problemas técnicos y bugs', '#ef4444', 'bug'),
+  ('Solicitud de Compra', 'Compra de materiales y equipos', '#10b981', 'shopping-cart'),
+  ('Soporte Técnico', 'Asistencia con software/hardware', '#3b82f6', 'support'),
+  ('Desarrollo', 'Nuevas funcionalidades', '#8b5cf6', 'code'),
+  ('General', 'Otras solicitudes', '#6b7280', 'help-circle');
+
+-- Crear índices para mejor rendimiento
+CREATE INDEX idx_tickets_status ON tickets(status);
+CREATE INDEX idx_tickets_assigned_to ON tickets(assigned_to);
+CREATE INDEX idx_tickets_created_by ON tickets(created_by);
+CREATE INDEX idx_tickets_due_date ON tickets(due_date);
+CREATE INDEX idx_comments_ticket_id ON comments(ticket_id);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ticket_history ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de seguridad para profiles
+CREATE POLICY "Todos pueden ver perfiles" ON profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Políticas para tickets
+CREATE POLICY "Todos pueden ver tickets" ON tickets
+  FOR SELECT USING (true);
+
+CREATE POLICY "Usuarios pueden crear tickets" ON tickets
+  FOR INSERT WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "Usuarios pueden actualizar tickets asignados" ON tickets
+  FOR UPDATE USING (
+    auth.uid() = created_by OR 
+    auth.uid() = assigned_to OR
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'agent'))
+  );
+
+-- Función para actualizar automáticamente updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = TIMEZONE('utc'::text, NOW());
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Trigger para tickets
+CREATE TRIGGER update_tickets_updated_at BEFORE UPDATE
+  ON tickets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+
+
+3. Ejecutar el script
+    Click en "Run" (botón en la parte superior derecha)
+
+    O presionar Ctrl + Enter (Windows) / Cmd + Enter (Mac)
+
+    Esperar que aparezca "Success" en la parte inferior
+
+4. Verificar que se crearon las tablas
+    Ir a Table Editor (menú izquierdo)
+    Deberías ver 5 tablas:
+    ✅ profiles
+    ✅ categories
+    ✅ tickets
+    ✅ comments
+    ✅ ticket_history
+
+Paso 2: Verificar en auth.users (vía SQL)
+
+-- En SQL Editor
+    SELECT id, email, created_at 
+    FROM auth.users 
+    WHERE email LIKE '%test%';
+
+Probar las tablas profile y user
+
+-- Insertar perfiles para TODOS los usuarios de auth.users
+    INSERT INTO public.profiles (id, email, created_at)
+    SELECT 
+    id,  -- Usar el MISMO ID de auth.users
+    email,
+    created_at
+    FROM auth.users 
+    WHERE id NOT IN (SELECT id FROM public.profiles)  -- Solo si no existe
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Verificar
+    SELECT id, email, created_at FROM public.profiles;
+
+    si se inserya en profile todo bien por ahora
+
+    Confirm email deshabilitar!!!!!
+    Users will need to confirm their email address before signing in for the first time
+
+
+
+
+    seguimos con la guia.txt

@@ -1,0 +1,23 @@
+GUÍA COMPLETA PARA CONFIGURAR SUPABASE (Paso a Paso)
+
+PASO 2.1: CREAR CUENTA EN SUPABASE
+
+1. Registrarse en Supabase
+    Abrir navegador y dirigirse a: https://supabase.com
+
+    Click en "Start your project" (esquina superior derecha)
+
+    Click en "Sign in" → "Sign up"
+
+Registrarse con:
+
+    Opción 1: Cuenta de GitHub (recomendado para desarrolladores)
+
+    Opción 2: Email y contraseña
+
+    2. Verificar email (si se registró con email)
+        Revisar bandeja de entrada
+
+        Click en el enlace de verificación que envió Supabase
+
+PASO 2.2: CREAR EL PROYECTO HELP DESK
