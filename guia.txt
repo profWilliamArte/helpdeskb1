@@ -33,7 +33,7 @@ Explicación de cada paquete:
 
 src/
 ├── components/
-│   ├── auth/
+│   ├── auth/             
 │   │   ├── Login.jsx
 │   │   └── Register.jsx
 │   ├── common/
@@ -60,6 +60,64 @@ src/
 ├── App.jsx
 ├── main.jsx
 └── index.css
+
+
+
+src/
+Raíz del código fuente de la aplicación.
+
+📁 components/
+Contiene componentes reutilizables agrupados por funcionalidad o contexto.
+
+auth/: Componentes relacionados con autenticación.
+    Login.jsx: Formulario para iniciar sesión.
+    Register.jsx: Formulario para crear una nueva cuenta.
+
+common/: Componentes genéricos usados en múltiples partes.
+    ProtectedRoute.jsx: Envoltorio de rutas que restringe el acceso a usuarios no autenticados.
+
+layout/: Elementos de diseño global.
+    Navigation.jsx: Barra de navegación superior o lateral.
+    Footer.jsx: Pie de página .
+
+tickets/: Componentes específicos del dominio de "tickets".
+    FilterBar.jsx: Filtros para buscar o segmentar tickets.
+    TicketCard.jsx: Representación visual de un ticket individual.
+    TicketForm.jsx: Formulario para crear o editar un ticket.
+
+📁 context/
+    Gestión del estado global mediante React Context API.
+
+    AuthContext.jsx: Proveerá estado de autenticación (usuario, métodos de login/logout, etc.). Actualmente vacío, pero será clave para integrar Supabase Auth.
+
+📁 pages/
+    Páginas principales de la aplicación (cada una representa una ruta completa).
+
+    Dashboard.jsx: Página principal tras el login.
+    Tickets.jsx: Lista general de tickets.
+    TicketDetail.jsx: Vista detallada de un ticket específico.
+    TicketEdit.jsx: Página para editar un ticket existente.
+    En proyectos con enrutamiento (React Router), estas páginas se conectan directamente a rutas (/dashboard, /tickets, etc.).
+
+📁 services/
+Lógica de comunicación con APIs externas o servicios.
+
+    supabase.js: Configuración e instancia del cliente de Supabase (inicialización con createClient).
+    ticketService.js: Funciones para interactuar con la tabla de tickets en Supabase (crear, leer, actualizar, eliminar).
+
+    Esta separación permite mantener los componentes limpios y centrados en la UI, delegando la lógica de datos a los servicios.
+
+📁 utils/
+Utilidades genéricas (funciones auxiliares, formateo, validaciones, etc.).
+    Actualmente vacía, pero podrías añadir cosas como formatDate.js, validateEmail.js, etc.
+
+
+
+✅ Ventajas de esta estructura
+    Separación de responsabilidades: UI, lógica de negocio, autenticación y datos están bien divididos.
+    Escalabilidad: Fácil añadir nuevas entidades (ej. users/, reports/) sin colapsar carpetas.
+    Mantenibilidad: Cada pieza tiene un propósito claro, lo que facilita depuración y actualizaciones.
+    Reutilización: Componentes como TicketCard o FilterBar pueden usarse en múltiples páginas.
 
 
 📋 CHECKLIST ETAPA 0 COMPLETADA:
